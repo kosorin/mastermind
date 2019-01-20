@@ -44,7 +44,7 @@ namespace Mastermind
             return Enumerable.Range(Peg.Min, PegCount).ToList();
         }
 
-        public IList<PegPattern> GetAllPatterns(int size, bool allowDuplicates = true)
+        public LinkedList<PegPattern> GetAllPatterns(int size, bool allowDuplicates)
         {
             if (size < 1)
             {
@@ -58,10 +58,28 @@ namespace Mastermind
             {
                 patternQuery = patternQuery.SelectMany(_ => paletteSet, (pq, p) => pq.Append(p).ToArray());
             }
-            return patternQuery
+            return new LinkedList<PegPattern>(patternQuery
                 .Where(x => allowDuplicates || x.Length == x.Distinct().Count())
                 .Select(x => new PegPattern(palette, x))
-                .ToList();
+                .ToList());
+        }
+
+        public PegPattern GetRandomPattern(int size, bool allowDuplicates)
+        {
+            var sourcePegs = GetPegs();
+            var patternPegs = new List<int>();
+            var random = new Random();
+            for (int i = 0; i < size; i++)
+            {
+                var index = random.Next(sourcePegs.Count);
+                var peg = sourcePegs[index];
+                if (!allowDuplicates)
+                {
+                    sourcePegs.RemoveAt(index);
+                }
+                patternPegs.Add(peg);
+            }
+            return new PegPattern(this, patternPegs);
         }
 
 

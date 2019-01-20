@@ -1,73 +1,83 @@
-﻿using System;
+﻿using Mastermind.Players;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Mastermind
 {
     public class Board
     {
-        private readonly PegPattern _code;
-        private readonly List<(PegPattern, GuessResult)> _guessResults;
+        private readonly ICodemaker _codemaker;
+        private readonly ICodebreaker _codebreaker;
 
-        public Board(PegPattern code, IGameOptions options)
+        private readonly List<(PegPattern, GuessResult)> _turns;
+
+        public Board(ICodemaker codemaker, ICodebreaker codebreaker)
         {
-            Options = options;
+            _codemaker = codemaker ?? throw new ArgumentNullException(nameof(codemaker));
+            _codebreaker = codebreaker ?? throw new ArgumentNullException(nameof(codebreaker));
 
-            _code = code ?? throw new ArgumentNullException(nameof(code));
-            _guessResults = new List<(PegPattern, GuessResult)>();
-
-            if (!Options.AllowDuplicates && _code.Size != _code.Distinct().Count())
-            {
-                throw new ArgumentException("Code pattern contains duplicates.");
-            }
+            _turns = new List<(PegPattern, GuessResult)>();
         }
 
-
-        public IGameOptions Options { get; }
-
-        public Palette Palette => _code.Palette;
-
-        public int Size => _code.Size;
-
-        public IReadOnlyList<(PegPattern, GuessResult)> GuessResults => _guessResults;
-
-        public int CurrentTurn => _guessResults.Count;
-
-
-        public GuessResult Guess(PegPattern guess)
+        public bool Run()
         {
-            var guessResult = guess.CompareTo(_code);
-            _guessResults.Add((guess, guessResult));
-            return guessResult;
-        }
-
-        public string ToPrintString()
-        {
-            var sb = new StringBuilder();
-
-            var turnMaxWidth = _guessResults.Count.GetWidth();
-            var turnSuffix = ". ";
-
-            var matchMaxWidth = _code.Size.GetWidth();
-            for (int turn = 0; turn < _guessResults.Count; turn++)
+            if (_turns.Any())
             {
-                var (guess, guessResult) = _guessResults[turn];
-                sb.Append((turn + 1).ToString().PadLeft(turnMaxWidth));
-                sb.Append(turnSuffix);
-                sb.Append(guess);
-                sb.Append(" ");
-                sb.Append(guessResult);
-                sb.AppendLine();
+                throw new InvalidOperationException("The game is already in progress.");
             }
 
-            var code = _code.ToString();
-            sb.Append('-', turnMaxWidth + turnSuffix.Length + code.Length);
-            sb.AppendLine();
-            sb.Append(' ', turnMaxWidth + turnSuffix.Length);
-            sb.Append(code);
+            using (ShellColorizer.SetForeground(ConsoleColor.DarkGreen))
+            {
+                Shell.WriteLine("START");
+            }
 
-            return sb.ToString();
+            var guess = _codebreaker.BuildInitialGuess();
+            while (guess != null)
+            {
+                Shell.Write($"{_turns.Count + 1,5}. ");
+                using (ShellColorizer.SetForeground(ConsoleColor.Red))
+                {
+                    Shell.WriteLine(guess);
+                }
+                var guessResult = _codemaker.ProcessGuess(guess);
+                Shell.UndoLine();
+
+                _turns.Add((guess, guessResult));
+                Shell.Write($"{_turns.Count,5}. ");
+                using (ShellColorizer.SetForeground(ConsoleColor.Blue))
+                {
+                    Shell.Write(guess);
+                    Shell.Write(' ');
+                }
+                using (ShellColorizer.SetForeground(ConsoleColor.Black))
+                {
+                    Shell.Write(guessResult);
+                    Shell.Write(' ');
+                }
+
+                if (guessResult.IsVictory(guess.Size))
+                {
+                    using (ShellColorizer.SetForeground(ConsoleColor.DarkYellow))
+                    using (ShellTextStyler.Set(ShellTextStyle.Underline))
+                    {
+                        Shell.WriteLine("<VICTORY>");
+                    }
+                    return true;
+                }
+                else
+                {
+                    Shell.WriteLine();
+                }
+
+                guess = _codebreaker.BuildNextGuess(guessResult);
+            }
+
+            using (ShellColorizer.SetForeground(ConsoleColor.Red))
+            {
+                Shell.WriteLine("It's too difficult to solve :(");
+            }
+            return false;
         }
     }
 }

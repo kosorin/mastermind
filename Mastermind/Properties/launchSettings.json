@@ -1,8 +1,7 @@
 {
   "profiles": {
     "Mastermind": {
-      "commandName": "Project",
-      "commandLineArgs": "6 5 1 0 3"
+      "commandName": "Project"
     }
   }
 }

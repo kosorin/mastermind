@@ -22,17 +22,17 @@ namespace Mastermind
                 throw new InvalidOperationException("Patterns must have same palette and size.");
             }
 
-            var positionMatch = Pegs
+            var positionCount = Pegs
                 .Zip(other.Pegs, (a, b) => a == b)
                 .Count(x => x);
 
-            var colorMatch = Pegs
+            var colorCount = Pegs
                 .Intersect(other.Pegs)
                 .Sum(x => Math.Min(_pegCounts[x], other._pegCounts[x]));
 
-            colorMatch -= positionMatch;
+            colorCount -= positionCount;
 
-            return new GuessResult(colorMatch, positionMatch);
+            return new GuessResult(positionCount, colorCount);
         }
 
 

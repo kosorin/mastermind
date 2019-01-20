@@ -5,28 +5,40 @@ namespace Mastermind
 {
     public class GuessResult : IEquatable<GuessResult>
     {
-        public GuessResult(int colorMatch, int positionMatch)
+        public static char PositionChar { get; } = '\u25CF';
+
+        public static char ColorChar { get; } = '\u25CB';
+
+
+        public GuessResult(int positionCount, int colorCount)
         {
-            ColorMatch = colorMatch;
-            PositionMatch = positionMatch;
+            PositionCount = positionCount;
+            ColorCount = colorCount;
         }
 
 
-        public int ColorMatch { get; }
+        public int PositionCount { get; }
 
-        public int PositionMatch { get; }
+        public int ColorCount { get; }
 
 
-        public bool Check(int size)
+        public bool IsVictory(int size)
         {
-            return PositionMatch == size;
+            return PositionCount == size;
+        }
+
+        // TODO: Validate result
+        public bool IsValid(int size)
+        {
+            return PositionCount + ColorCount < size
+                || (PositionCount + ColorCount == size && ColorCount > 1);
         }
 
 
         public override string ToString()
         {
-            var positions = Enumerable.Repeat('\u25CF', PositionMatch);
-            var colors = Enumerable.Repeat('\u25CB', ColorMatch);
+            var positions = Enumerable.Repeat(PositionChar, PositionCount);
+            var colors = Enumerable.Repeat(ColorChar, ColorCount);
             return string.Join(' ', positions.Concat(colors));
         }
 
@@ -81,13 +93,13 @@ namespace Mastermind
 
         protected virtual bool EqualsCore(GuessResult other)
         {
-            return ColorMatch == other.ColorMatch
-                && PositionMatch == other.PositionMatch;
+            return PositionCount == other.PositionCount
+                && ColorCount == other.ColorCount;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(ColorMatch, PositionMatch);
+            return HashCode.Combine(PositionCount, ColorCount);
         }
     }
 }

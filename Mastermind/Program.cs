@@ -1,91 +1,111 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Mastermind.Players;
+using System;
 
 namespace Mastermind
 {
     internal static class Program
     {
-        private static void Main(string[] args)
+        private const int _headerWidth = 12;
+
+        private static void Main()
         {
-            Console.OutputEncoding = Encoding.UTF8;
-
-            var numbers = ParseNumbers(args);
-            if (numbers == null)
+            Shell.Initialize(new ShellOptions
             {
-                return;
-            }
+                DefaultForegroundColor = ConsoleColor.DarkGray,
+                DefaultBackgroundColor = ConsoleColor.Gray,
+                PromptColor = ConsoleColor.Black,
+                PromptQuestionColor = ConsoleColor.Red,
+                PromptOptionColor = ConsoleColor.Magenta,
+            });
 
-            var options = Options.Default;
-
-            try
+            do
             {
-                var palette = new Palette(numbers[0]);
-                var pattern = new PegPattern(palette, numbers.Skip(1).ToList());
-
-                if (!options.Quiet && !CheckExecutionTime(palette.PegCount, pattern.Size))
+                Shell.Clear();
+                try
                 {
-                    return;
+                    var options = CreateGameOptions();
+                    if (options == null)
+                    {
+                        return;
+                    }
+                    var codemaker = CreateCodemaker(options);
+                    var codebreaker = CreateCodebreaker(options);
+                    var board = new Board(codemaker, codebreaker);
+                    board.Run();
                 }
-
-                var board = new Board(pattern, options);
-                var solver = new Solver(board);
-                if (!solver.Solve())
+                catch (Exception e)
                 {
-                    Console.WriteLine("It's too difficult to solve :(");
+                    using (ShellColorizer.Set(ConsoleColor.White, ConsoleColor.Red))
+                    {
+                        Shell.WriteLine($"Error: {e.Message}");
+                    }
                 }
-                Console.WriteLine(board.ToPrintString());
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Error: {e.Message}");
-            }
+            } while (Shell.PromptBool("Play again?"));
         }
 
-        private static List<int> ParseNumbers(string[] args)
+        private static GameOptions CreateGameOptions()
         {
-            var numbers = new List<int>();
+            var options = new GameOptions();
 
-            try
+            options.Palette = new Palette(Shell.PromptInt("Number of peg color", 6, (1, 12)));
+            ShellEx.WriteKeyValue("Peg colors", options.Palette.PegCount);
+
+            options.AllowDuplicates = Shell.PromptBool("Allow duplicates", true);
+            ShellEx.WriteKeyValue("Duplicates", options.AllowDuplicates ? "yes" : "no");
+
+            options.Size = Shell.PromptInt("Length of secret code", 4, (1, options.AllowDuplicates ? 16 : Math.Min(options.Palette.PegCount, 12)));
+            ShellEx.WriteKeyValue("Code length", options.Size);
+
+            if (!CheckExecutionTime(options.Palette.PegCount, options.Size))
             {
-                numbers.AddRange(args.Select(x => int.Parse(x)));
-            }
-            catch
-            {
-                Console.WriteLine("Unable to parse command line arguments.");
                 return null;
             }
-
-            if (numbers.Count < 2)
-            {
-                Console.WriteLine("Usage:   Program.exe <Palette> <Pattern>");
-                Console.WriteLine("Example: Program.exe 6         4 1 2 2");
-                return null;
-            }
-
-            return numbers;
+            return options;
         }
 
         private static bool CheckExecutionTime(int palette, int size)
         {
             if (Math.Pow(palette, size) > 1_000_000)
             {
-                while (true)
-                {
-                    Console.Write("It can take some time to solve. Continue? [Y/n]: ");
-                    var answer = Console.ReadLine()?.Trim().ToUpper();
-                    if (string.IsNullOrWhiteSpace(answer) || answer == "Y")
-                    {
-                        break;
-                    }
-                    else if (answer == "N")
-                    {
-                        return false;
-                    }
-                }
+                return Shell.PromptBool("It can take some time to solve. Continue?", true);
             }
             return true;
+        }
+
+        public static ICodemaker CreateCodemaker(IGameOptions options)
+        {
+            var type = ShellEx.PromptPlayerType("Codemaker");
+            ShellEx.WriteKeyValue("Codemaker", type.ToString().ToLower());
+
+            switch (type)
+            {
+            case PlayerType.Human:
+                return new HumanCodemaker(options);
+            case PlayerType.Computer:
+                var code = ShellEx.PromptPegPattern("Enter secret code", options.Palette, options.Size, options.AllowDuplicates, true);
+                return new ComputerCodemaker(options, code);
+            default: throw new Exception($"Unknown player type: {type}");
+            }
+        }
+
+        public static ICodebreaker CreateCodebreaker(IGameOptions options)
+        {
+            var type = ShellEx.PromptPlayerType("Codebreaker");
+            ShellEx.WriteKeyValue("Codebreaker", type.ToString().ToLower());
+
+            switch (type)
+            {
+            case PlayerType.Human:
+                return new HumanCodebreaker(options);
+            case PlayerType.Computer:
+                PegPattern initialGuess = null;
+                if (Shell.PromptBool("Do you want to set initial guess?", false))
+                {
+                    initialGuess = ShellEx.PromptPegPattern("Enter initial guess", options.Palette, options.Size, options.AllowDuplicates, true);
+                }
+                return new ComputerCodebreaker(options, initialGuess);
+            default: throw new Exception($"Unknown player type: {type}");
+            }
         }
     }
 }
