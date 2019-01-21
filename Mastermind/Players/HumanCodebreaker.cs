@@ -6,6 +6,8 @@
         {
         }
 
+        public sealed override PlayerType Type => PlayerType.Human;
+
 
         public override PegPattern BuildInitialGuess()
         {
@@ -16,6 +18,7 @@
         {
             return BuildGuess();
         }
+
 
         private PegPattern BuildGuess()
         {

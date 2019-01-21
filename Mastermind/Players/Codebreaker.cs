@@ -1,13 +1,12 @@
 ﻿namespace Mastermind.Players
 {
-    public abstract class Codebreaker : ICodebreaker
+    public abstract class Codebreaker : Player, ICodebreaker
     {
-        protected Codebreaker(IGameOptions options)
+        protected Codebreaker(IGameOptions options) : base(options)
         {
-            Options = options;
         }
 
-        protected IGameOptions Options { get; }
+        public sealed override PlayerRole Role => PlayerRole.Codebreaker;
 
         protected PegPattern LastGuess { get; set; }
 

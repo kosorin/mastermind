@@ -16,6 +16,8 @@ namespace Mastermind.Players
             _initialGuess = initialGuess;
         }
 
+        public sealed override PlayerType Type => PlayerType.Computer;
+
 
         public override PegPattern BuildInitialGuess()
         {
@@ -64,15 +66,6 @@ namespace Mastermind.Players
 
         private void ProcessGuessResult(GuessResult guessResult)
         {
-            //for (int i = _availableGuesses.Count - 1; i >= 0; i--)
-            //{
-            //    var pattern = _availableGuesses[i];
-            //    if (LastGuess.CompareTo(pattern) != guessResult)
-            //    {
-            //        _availableGuesses.RemoveAt(i);
-            //    }
-            //}
-
             var currentNode = _availableGuesses.First;
             while (currentNode != null)
             {

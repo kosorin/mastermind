@@ -1,6 +1,6 @@
 ﻿namespace Mastermind.Players
 {
-    public interface ICodebreaker
+    public interface ICodebreaker : IPlayer
     {
         PegPattern BuildInitialGuess();
 

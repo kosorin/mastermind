@@ -11,6 +11,8 @@ namespace Mastermind.Players
             _code = code ?? Options.Palette.GetRandomPattern(Options.Size, Options.AllowDuplicates);
         }
 
+        public sealed override PlayerType Type => PlayerType.Computer;
+
         public override GuessResult ProcessGuess(PegPattern guess)
         {
             return guess.CompareTo(_code);

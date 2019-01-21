@@ -1,6 +1,6 @@
 ﻿namespace Mastermind.Players
 {
-    public interface ICodemaker
+    public interface ICodemaker : IPlayer
     {
         GuessResult ProcessGuess(PegPattern guess);
     }

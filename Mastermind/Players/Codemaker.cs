@@ -1,13 +1,12 @@
 ﻿namespace Mastermind.Players
 {
-    public abstract class Codemaker : ICodemaker
+    public abstract class Codemaker : Player, ICodemaker
     {
-        protected Codemaker(IGameOptions options)
+        protected Codemaker(IGameOptions options) : base(options)
         {
-            Options = options;
         }
 
-        protected IGameOptions Options { get; }
+        public sealed override PlayerRole Role => PlayerRole.Codemaker;
 
         public abstract GuessResult ProcessGuess(PegPattern guess);
     }

@@ -6,6 +6,8 @@
         {
         }
 
+        public sealed override PlayerType Type => PlayerType.Human;
+
         public override GuessResult ProcessGuess(PegPattern guess)
         {
             var positionCount = Shell.PromptInt("Number of pegs in correct position", 0, (0, guess.Size));
