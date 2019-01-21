@@ -8,10 +8,9 @@ namespace Mastermind.Players
     {
         private readonly PegPattern _initialGuess;
 
-        private readonly Random _random = new Random();
         private LinkedList<PegPattern> _availableGuesses;
 
-        public ComputerCodebreaker(IGameOptions options, PegPattern initialGuess) : base(options)
+        public ComputerCodebreaker(IGameOptions options, PegPattern initialGuess = null) : base(options)
         {
             _initialGuess = initialGuess;
         }
@@ -48,7 +47,7 @@ namespace Mastermind.Players
 
             if (_availableGuesses.Count > 0)
             {
-                LastGuess = _availableGuesses.First.Value; //_availableGuesses[_random.Next(_availableGuesses.Count)];
+                LastGuess = _availableGuesses.First.Value;
             }
             else
             {

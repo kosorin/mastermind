@@ -17,19 +17,11 @@ namespace Mastermind
         }
 
 
-        public static PegPattern PromptPegPattern(string question, IPegCollectionOptions options, bool allowRandom = false)
+        public static PegPattern PromptPegPattern(string question, IPegCollectionOptions options)
         {
-            var pegOptions = (string[])null;
-            var defaultPegOption = (int?)null;
-            if (allowRandom)
+            var pegs = Shell.Prompt(question, null, null, line =>
             {
-                pegOptions = new[] { "random" };
-                defaultPegOption = 0;
-            }
-
-            var pegs = Shell.Prompt(question, pegOptions, defaultPegOption, line =>
-            {
-                if (allowRandom && string.IsNullOrWhiteSpace(line))
+                if (string.IsNullOrWhiteSpace(line))
                 {
                     return null;
                 }
@@ -38,22 +30,17 @@ namespace Mastermind
                     .Where(x => !string.IsNullOrWhiteSpace(x))
                     .Select(x => int.Parse(x))
                     .ToArray();
-            }, value => (value == null && allowRandom) || (value != null
+            }, value => value != null
                 && value.Length == options.Size
                 && value.All(options.Palette.Contains)
                 && (options.AllowDuplicates || value.Length == value.Distinct().Count())
-                ));
-
-            if (pegs == null && allowRandom)
-            {
-                return options.Palette.GetRandomPattern(options);
-            }
+                );
             return new PegPattern(options.Palette, pegs);
         }
 
-        public static PlayerType PromptPlayerType(string playerPositionName)
+        public static PlayerType PromptPlayerType(string playerTypeName, PlayerType? defaultPlayerType = null)
         {
-            return Shell.PromptEnum<PlayerType>($"{playerPositionName} player type");
+            return Shell.PromptEnum($"{playerTypeName} player type", defaultPlayerType);
         }
     }
 }

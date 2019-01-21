@@ -57,11 +57,6 @@ namespace Mastermind
             return Set(Console.ForegroundColor, color);
         }
 
-        public static ShellColorizer Reset()
-        {
-            return Set(DefaultForegroundColor, DefaultBackgroundColor);
-        }
-
 
         private static void SetCore(ConsoleColor foregroundColor, ConsoleColor backgroundColor)
         {

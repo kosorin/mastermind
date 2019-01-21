@@ -8,6 +8,12 @@ namespace Mastermind
     {
         public static void Initialize(ShellOptions options)
         {
+            if (IsInitialized)
+            {
+                return;
+            }
+            IsInitialized = true;
+
             Options = options;
 
             Console.OutputEncoding = Options.Encoding;
@@ -16,8 +22,9 @@ namespace Mastermind
             ShellTextStyler.Initialize();
         }
 
-
         public static ShellOptions Options { get; private set; }
+
+        private static bool IsInitialized { get; set; }
 
 
         public static void Clear()

@@ -16,20 +16,25 @@ namespace Mastermind
                 PromptOptionColor = ConsoleColor.Magenta,
             });
 
+            Board lastBoard = null;
             do
             {
                 Shell.Clear();
                 try
                 {
-                    var options = CreateGameOptions();
+                    var options = CreateGameOptions(lastBoard?.Options);
                     if (options == null)
                     {
                         return;
                     }
-                    var codemaker = CreateCodemaker(options);
-                    var codebreaker = CreateCodebreaker(options);
-                    var board = new Board(codemaker, codebreaker);
+
+                    var codemaker = CreateCodemaker(options, lastBoard?.Codemaker);
+                    var codebreaker = CreateCodebreaker(options, lastBoard?.Codebreaker);
+                    var board = new Board(options, codemaker, codebreaker);
+
                     board.Run();
+
+                    lastBoard = board;
                 }
                 catch (Exception e)
                 {
@@ -37,21 +42,23 @@ namespace Mastermind
                     {
                         Shell.WriteLine($"Error: {e.Message}");
                     }
+                    return;
                 }
             } while (Shell.PromptBool("Play again?"));
         }
 
-        private static GameOptions CreateGameOptions()
+        private static GameOptions CreateGameOptions(GameOptions lastOptions)
         {
             var options = new GameOptions();
 
-            options.Palette = new Palette(Shell.PromptInt("Number of peg color", 6, (1, 12)));
+            options.Palette = new Palette(Shell.PromptInt("Number of peg color", lastOptions?.Palette.PegCount ?? 6, (1, 10)));
             ShellEx.WriteKeyValue("Peg colors", options.Palette.PegCount);
 
-            options.AllowDuplicates = Shell.PromptBool("Allow duplicates", true);
+            options.AllowDuplicates = Shell.PromptBool("Allow duplicates", lastOptions?.AllowDuplicates ?? true);
             ShellEx.WriteKeyValue("Duplicates", options.AllowDuplicates ? "yes" : "no");
 
-            options.Size = Shell.PromptInt("Length of secret code", 4, (1, options.AllowDuplicates ? 16 : Math.Min(options.Palette.PegCount, 12)));
+            var maxSize = options.AllowDuplicates ? 10 : options.Palette.PegCount;
+            options.Size = Shell.PromptInt("Length of secret code", Math.Min(maxSize, lastOptions?.Size ?? 4), (1, maxSize));
             ShellEx.WriteKeyValue("Code length", options.Size);
 
             if (!CheckExecutionTime(options.Palette.PegCount, options.Size))
@@ -70,9 +77,9 @@ namespace Mastermind
             return true;
         }
 
-        public static ICodemaker CreateCodemaker(IGameOptions options)
+        public static ICodemaker CreateCodemaker(IGameOptions options, ICodemaker lastCodemaker)
         {
-            var type = ShellEx.PromptPlayerType("Codemaker");
+            var type = ShellEx.PromptPlayerType("Codemaker", lastCodemaker?.Type);
             ShellEx.WriteKeyValue("Codemaker", type.ToString().ToLower());
 
             switch (type)
@@ -80,15 +87,28 @@ namespace Mastermind
             case PlayerType.Human:
                 return new HumanCodemaker(options);
             case PlayerType.Computer:
-                var code = ShellEx.PromptPegPattern("Enter secret code", options, true);
+                PegPattern code;
+                var codeType = Shell.PromptEnum<ComputerCodeType>("Choose secret code", ComputerCodeType.Random);
+                switch (codeType)
+                {
+                case ComputerCodeType.Random:
+                    code = options.Palette.GetRandomPattern(options);
+                    break;
+                case ComputerCodeType.Custom:
+                    code = ShellEx.PromptPegPattern("Enter secret code", options);
+                    break;
+                default:
+                    throw new Exception($"Unknown code type");
+                }
+                ShellEx.WriteKeyValue("Code", codeType.ToString().ToLower());
                 return new ComputerCodemaker(options, code);
             default: throw new Exception($"Unknown player type: {type}");
             }
         }
 
-        public static ICodebreaker CreateCodebreaker(IGameOptions options)
+        public static ICodebreaker CreateCodebreaker(IGameOptions options, ICodebreaker lastCodebreaker)
         {
-            var type = ShellEx.PromptPlayerType("Codebreaker");
+            var type = ShellEx.PromptPlayerType("Codebreaker", lastCodebreaker?.Type);
             ShellEx.WriteKeyValue("Codebreaker", type.ToString().ToLower());
 
             switch (type)
@@ -96,14 +116,39 @@ namespace Mastermind
             case PlayerType.Human:
                 return new HumanCodebreaker(options);
             case PlayerType.Computer:
-                PegPattern initialGuess = null;
-                if (Shell.PromptBool("Do you want to set initial guess?", false))
+                PegPattern initialGuess;
+                var initialGuessType = Shell.PromptEnum<ComputerInitialGuessType>("Choose initial guess", ComputerInitialGuessType.Default);
+                switch (initialGuessType)
                 {
-                    initialGuess = ShellEx.PromptPegPattern("Enter initial guess", options, true);
+                case ComputerInitialGuessType.Default:
+                    initialGuess = null;
+                    break;
+                case ComputerInitialGuessType.Random:
+                    initialGuess = options.Palette.GetRandomPattern(options);
+                    break;
+                case ComputerInitialGuessType.Custom:
+                    initialGuess = ShellEx.PromptPegPattern("Enter initial guess", options);
+                    break;
+                default:
+                    throw new Exception($"Unknown initial guess type");
                 }
+                ShellEx.WriteKeyValue("Initial guess", initialGuessType.ToString().ToLower());
                 return new ComputerCodebreaker(options, initialGuess);
             default: throw new Exception($"Unknown player type: {type}");
             }
+        }
+
+        private enum ComputerCodeType
+        {
+            Random,
+            Custom,
+        }
+
+        private enum ComputerInitialGuessType
+        {
+            Default,
+            Random,
+            Custom,
         }
     }
 }
