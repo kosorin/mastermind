@@ -34,7 +34,8 @@ namespace Mastermind
                     return null;
                 }
                 return Regex
-                    .Split(line, @"\s*,\s*|\s+")
+                    .Split(line, @"\s+")
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
                     .Select(x => int.Parse(x))
                     .ToArray();
             }, value => (value == null && allowRandom) || (value != null
