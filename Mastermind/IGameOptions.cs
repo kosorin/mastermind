@@ -1,11 +1,6 @@
 ﻿namespace Mastermind
 {
-    public interface IGameOptions
+    public interface IGameOptions : IPegCollectionOptions
     {
-        bool AllowDuplicates { get; }
-
-        Palette Palette { get; }
-
-        int Size { get; }
     }
 }
