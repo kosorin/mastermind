@@ -44,36 +44,36 @@ namespace Mastermind
             return Enumerable.Range(Peg.Min, PegCount).ToList();
         }
 
-        public LinkedList<PegPattern> GetAllPatterns(int size, bool allowDuplicates)
+        public LinkedList<PegPattern> GetAllPatterns(IPegCollectionOptions options)
         {
-            if (size < 1)
+            if (options.Size < 1)
             {
-                throw new ArgumentOutOfRangeException(nameof(size));
+                throw new ArgumentOutOfRangeException(nameof(options.Size));
             }
 
             var palette = new Palette(PegCount);
             var paletteSet = ToSet();
             var patternQuery = paletteSet.Select(x => new[] { x });
-            for (int i = 1; i < size; i++)
+            for (int i = 1; i < options.Size; i++)
             {
                 patternQuery = patternQuery.SelectMany(_ => paletteSet, (pq, p) => pq.Append(p).ToArray());
             }
             return new LinkedList<PegPattern>(patternQuery
-                .Where(x => allowDuplicates || x.Length == x.Distinct().Count())
+                .Where(x => options.AllowDuplicates || x.Length == x.Distinct().Count())
                 .Select(x => new PegPattern(palette, x))
                 .ToList());
         }
 
-        public PegPattern GetRandomPattern(int size, bool allowDuplicates)
+        public PegPattern GetRandomPattern(IPegCollectionOptions options)
         {
             var sourcePegs = GetPegs();
             var patternPegs = new List<int>();
             var random = new Random();
-            for (int i = 0; i < size; i++)
+            for (int i = 0; i < options.Size; i++)
             {
                 var index = random.Next(sourcePegs.Count);
                 var peg = sourcePegs[index];
-                if (!allowDuplicates)
+                if (!options.AllowDuplicates)
                 {
                     sourcePegs.RemoveAt(index);
                 }

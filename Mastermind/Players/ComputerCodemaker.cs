@@ -8,7 +8,7 @@ namespace Mastermind.Players
 
         public ComputerCodemaker(IGameOptions options, PegPattern code = null) : base(options)
         {
-            _code = code ?? Options.Palette.GetRandomPattern(Options.Size, Options.AllowDuplicates);
+            _code = code ?? Options.Palette.GetRandomPattern(Options);
         }
 
         public sealed override PlayerType Type => PlayerType.Computer;

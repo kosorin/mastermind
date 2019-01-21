@@ -5,8 +5,6 @@ namespace Mastermind
 {
     internal static class Program
     {
-        private const int _headerWidth = 12;
-
         private static void Main()
         {
             Shell.Initialize(new ShellOptions
@@ -82,7 +80,7 @@ namespace Mastermind
             case PlayerType.Human:
                 return new HumanCodemaker(options);
             case PlayerType.Computer:
-                var code = ShellEx.PromptPegPattern("Enter secret code", options.Palette, options.Size, options.AllowDuplicates, true);
+                var code = ShellEx.PromptPegPattern("Enter secret code", options, true);
                 return new ComputerCodemaker(options, code);
             default: throw new Exception($"Unknown player type: {type}");
             }
@@ -101,7 +99,7 @@ namespace Mastermind
                 PegPattern initialGuess = null;
                 if (Shell.PromptBool("Do you want to set initial guess?", false))
                 {
-                    initialGuess = ShellEx.PromptPegPattern("Enter initial guess", options.Palette, options.Size, options.AllowDuplicates, true);
+                    initialGuess = ShellEx.PromptPegPattern("Enter initial guess", options, true);
                 }
                 return new ComputerCodebreaker(options, initialGuess);
             default: throw new Exception($"Unknown player type: {type}");

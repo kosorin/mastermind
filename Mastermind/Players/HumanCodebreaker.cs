@@ -22,7 +22,7 @@
 
         private PegPattern BuildGuess()
         {
-            return ShellEx.PromptPegPattern("Guess the secret code", Options.Palette, Options.Size, Options.AllowDuplicates);
+            return ShellEx.PromptPegPattern("Guess the secret code", Options);
         }
     }
 }

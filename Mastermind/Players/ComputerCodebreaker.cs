@@ -61,7 +61,7 @@ namespace Mastermind.Players
 
         private void GenerateAvailableGuesses()
         {
-            _availableGuesses = Options.Palette.GetAllPatterns(Options.Size, Options.AllowDuplicates);
+            _availableGuesses = Options.Palette.GetAllPatterns(Options);
         }
 
         private void ProcessGuessResult(GuessResult guessResult)

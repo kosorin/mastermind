@@ -17,17 +17,17 @@ namespace Mastermind
         }
 
 
-        public static PegPattern PromptPegPattern(string question, Palette palette, int size, bool allowDuplicates, bool allowRandom = false)
+        public static PegPattern PromptPegPattern(string question, IPegCollectionOptions options, bool allowRandom = false)
         {
-            var options = (string[])null;
-            var defaultOption = (int?)null;
+            var pegOptions = (string[])null;
+            var defaultPegOption = (int?)null;
             if (allowRandom)
             {
-                options = new[] { "random" };
-                defaultOption = 0;
+                pegOptions = new[] { "random" };
+                defaultPegOption = 0;
             }
 
-            var pegs = Shell.Prompt(question, options, defaultOption, line =>
+            var pegs = Shell.Prompt(question, pegOptions, defaultPegOption, line =>
             {
                 if (allowRandom && string.IsNullOrWhiteSpace(line))
                 {
@@ -39,16 +39,16 @@ namespace Mastermind
                     .Select(x => int.Parse(x))
                     .ToArray();
             }, value => (value == null && allowRandom) || (value != null
-                && value.Length == size
-                && value.All(palette.Contains)
-                && (allowDuplicates || value.Length == value.Distinct().Count())
+                && value.Length == options.Size
+                && value.All(options.Palette.Contains)
+                && (options.AllowDuplicates || value.Length == value.Distinct().Count())
                 ));
 
             if (pegs == null && allowRandom)
             {
-                return palette.GetRandomPattern(size, allowDuplicates);
+                return options.Palette.GetRandomPattern(options);
             }
-            return new PegPattern(palette, pegs);
+            return new PegPattern(options.Palette, pegs);
         }
 
         public static PlayerType PromptPlayerType(string playerPositionName)
